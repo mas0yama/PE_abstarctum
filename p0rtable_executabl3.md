@@ -97,9 +97,84 @@ typedef struct _IMAGE_FILE_HEADER {
 ![[characteristics.png]]
 Рис 2 - пример содержимого поля Charasteristic (PE-bear, Obsidian MD)
 
+##### Optional Header
+Еще один обязательный подзаголовок PE-файла. Хранит необходимую для загрузки информация. Имеет два формата PE32+ (64) и PE32. Отличаются размером самой структуры и типом данных некоторых полей: ImageBase, SizeOfStackReserve, SizeOfStackCommit, SizeOfHeapReserve, SizeOfHeapCommit
+```c
+typedef struct _IMAGE_OPTIONAL_HEADER {
+    //
+    // Standard fields.
+    //
+
+    WORD    Magic;
+    BYTE    MajorLinkerVersion;
+    BYTE    MinorLinkerVersion;
+    DWORD   SizeOfCode;
+    DWORD   SizeOfInitializedData;
+    DWORD   SizeOfUninitializedData;
+    DWORD   AddressOfEntryPoint;
+    DWORD   BaseOfCode;
+    DWORD   BaseOfData;
+
+    //
+    // NT additional fields.
+    //
+
+    DWORD   ImageBase;
+    DWORD   SectionAlignment;
+    DWORD   FileAlignment;
+    WORD    MajorOperatingSystemVersion;
+    WORD    MinorOperatingSystemVersion;
+    WORD    MajorImageVersion;
+    WORD    MinorImageVersion;
+    WORD    MajorSubsystemVersion;
+    WORD    MinorSubsystemVersion;
+    DWORD   Win32VersionValue;
+    DWORD   SizeOfImage;
+    DWORD   SizeOfHeaders;
+    DWORD   CheckSum;
+    WORD    Subsystem;
+    WORD    DllCharacteristics;
+    DWORD   SizeOfStackReserve;
+    DWORD   SizeOfStackCommit;
+    DWORD   SizeOfHeapReserve;
+    DWORD   SizeOfHeapCommit;
+    DWORD   LoaderFlags;
+    DWORD   NumberOfRvaAndSizes;
+    IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
+} IMAGE_OPTIONAL_HEADER32, *PIMAGE_OPTIONAL_HEADER32;
+```
+- **Magic** - сигнатура исполняемого файла. **0x10B** - PE32 exec; **0x20B** - PE32+ exec; **0x107** - ROM image.
+- **MajorLinkerVersion, MinorLinkerVersion** - версия линкера
+- **SizeOfCode** - размер (.text) секции (суммарных размер всех секций)
+- **SizeOfInitializedData** - размер (.data) секции (суммарный размер всех секций)
+- **SizeOfUnitializedData** - размер (.bss) секции (суммарный размер всех секций)
+- **AddressOfEntryPoint** - RVA (relative virtual address) точки входа (файл загружен в память). Согласно документации - в исполняемых файлах - к адресу начала, для драйверов устройств - к функции инициализации. В DLL точка входа опциональна, и поле может быть установлено в 0.
+- **BaseOfCode** - RVA начала секции code, когда файл загружен в память
+- **BaseOfData** - (только в PE32) - RVA начала секции data, когда файл загружен в память.
+- **ImageBase** - поле содержит предпочитаемый адрес первого байта исп.файла при загрузке в память (basea address). Значение кратно 64к. Ввиду защит типа ASLR, это поле почти не используется  и загрузчик PE выбирает неиспользованную область памяти для загрузки исп.файла.
+- **SectionAlignment** - поле содержит RVA начала секций в виртуальной памяти.
+- **FileAlignment** - смещение относительно файла начала секций в исполняемой файле.
+- **MajorSubsytemVersion** и **MinorSubsystemVersion** - необходимая версия Windows
+- **SizeOfImage** - размер исполняемого файла, включая все заголовки
+- **SizeOfHeaders** - размер DOS-заглушки,NT хэдеров и секции хэдеров.
+- **Checksum** - chesum
+- **Subsystem** - поле, указывающее подсистему (CLI, GUI, Driver)
+- **DLLCharacteristiscs** - некоторые характеристики исполняемого файла. Несмотря на DLL в названии, есть и в обычных исполняемых файлах.
+- **SizeOfStackReserve, SizeOfStackCommit, SizeOfHeapReserve, SizeOfHeapCommit** 
+- **LoaderFlags** - зарезервировано. Всегда 0
+- **NumberOfRvaAndSizes** - Размер массива DataDirectory
+- **DataDirectory** - массив структур **IMAGE_DATA_DIRECTORY**
+
+
+
+
+
 
 ####  Список использованной литературы
 - https://0xrick.github.io/win-internals
 - https://habr.com/ru/articles/98174/
 - https://codeby.net/threads/0x01-issleduem-portable-executable-exe-fajl-format-pe-fajla.65415/
 - https://learn.microsoft.com/en-us/windows/win32/debug/pe-format
+
+
+
